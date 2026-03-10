@@ -1,0 +1,7 @@
+django
+djangorestframework
+djangorestframework-simplejwt
+djangorestframework-stubs
+pytz
+redis
+
