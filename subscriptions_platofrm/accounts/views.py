@@ -77,9 +77,13 @@ class LoginView(APIView):
 
         refresh = RefreshToken.for_user(auth_user)
 
+        from subscriptions.models import UserSubscription
+        has_active_subscription = UserSubscription.objects.filter(user=auth_user, active=True).exists()
+
         return Response({
             "access_token": str(refresh.access_token),
-            "refresh_token": str(refresh)
+            "refresh_token": str(refresh),
+            "has_active_subscription": has_active_subscription
         }, status=status.HTTP_200_OK)
 
 class LogoutView(APIView):

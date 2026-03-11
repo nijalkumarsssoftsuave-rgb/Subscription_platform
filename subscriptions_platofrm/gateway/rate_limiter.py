@@ -1,24 +1,34 @@
-import redis
-from django.conf import settings
+import logging
+from core.redis_client import redis_client
 
-redis_client = redis.Redis(
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    db=0
-)
-
+logger = logging.getLogger(__name__)
 
 def check_rate_limit(user_id, limit):
+    """
+    Check rate limit using Redis connection pool.
+    Edge cases:
+    - Redis down: fail open (allows request)
+    - Redis error: log and fail open
+    """
+    if not redis_client:
+        # Fail open policy: allow request if Redis is down
+        return True
 
     key = f"user_limit:{user_id}"
 
-    count = redis_client.get(key)
+    try:
+        count = redis_client.get(key)
 
-    if count and int(count) >= limit:
-        return False
+        if count and int(count) >= limit:
+            return False
 
-    redis_client.incr(key)
-
-    redis_client.expire(key, 86400)
-
-    return True
+        # Use a pipeline to ensure atomicity
+        pipe = redis_client.pipeline()
+        pipe.incr(key)
+        pipe.expire(key, 86400)  # Reset daily (could be configurable)
+        pipe.execute()
+        
+        return True
+    except Exception as e:
+        logger.error(f"Rate Limiter Redis error: {e}")
+        return True # Fail open

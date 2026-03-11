@@ -32,6 +32,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        "CONN_MAX_AGE": 600,
     }
 }
 
@@ -78,15 +79,17 @@ MIDDLEWARE = [
 
     "django.contrib.messages.middleware.MessageMiddleware",
 
-    "django.middleware.clickjacking.XFrameOptionsMiddleware"
-
-    # "core.middleware.APIGatewayMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.APIGatewayMiddleware",
+    "core.middleware.CDNCacheMiddleware",
 ]
 
 
 
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
+REDIS_DB = 0
+REDIS_MAX_CONNECTIONS = 20
 
 ROOT_URLCONF = "subscriptions_platofrm.urls"
 
